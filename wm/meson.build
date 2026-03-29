@@ -6,7 +6,9 @@ wode_sources = files(
   'window.cpp',
   'toplevel-window.cpp',
   'layer-window.cpp',
-  'popup-window.cpp'
+  'popup-window.cpp',
+  'input.cpp',
+  'keyboard.cpp'
 )
 
 executable('wode-wm',

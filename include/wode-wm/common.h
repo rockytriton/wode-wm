@@ -24,3 +24,9 @@ using std::unique_ptr;
 using std::vector;
 
 #include <xkbcommon/xkbcommon.h>
+
+enum CursorMode {
+	TINYWL_CURSOR_PASSTHROUGH,
+	TINYWL_CURSOR_MOVE,
+	TINYWL_CURSOR_RESIZE,
+};

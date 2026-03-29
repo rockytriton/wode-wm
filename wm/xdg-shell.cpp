@@ -1,6 +1,7 @@
 #include <wode-wm/xdg-shell.h>
 #include <wode-wm/toplevel-window.h>
 #include <wode-wm/compositor.h>
+#include <wode-wm/input.h>
 
 namespace wode
 {
@@ -51,7 +52,78 @@ void XdgShell::focus(TopLevelWindow &window) {
 
     println("Focused");
 }
-    
+ 
+TopLevelWindow *XdgShell::getWindowAt(double lx, double ly, double *sx, double *sy) {
+	wlr_scene_node *node = wlr_scene_node_at(&compositor.getScene()->tree.node, lx, ly, sx, sy);
+
+	if (node == NULL || node->type != WLR_SCENE_NODE_BUFFER) {
+		return NULL;
+	}
+
+	struct wlr_scene_buffer *scene_buffer = wlr_scene_buffer_from_node(node);
+	struct wlr_scene_surface *scene_surface =
+		wlr_scene_surface_try_from_buffer(scene_buffer);
+		
+	if (!scene_surface) {
+		return NULL;
+	}
+
+	struct wlr_scene_tree *tree = node->parent;
+	
+	while (tree != NULL && tree->node.data == NULL) {
+		tree = tree->node.parent;
+	}
+
+	if (tree == nullptr) {
+		return nullptr;
+	}
+	
+	return (TopLevelWindow *)tree->node.data;
+}
+
+void XdgShell::processResize() {
+
+	TopLevelWindow *wnd = getGrabbedWindow();
+
+	double border_x = compositor.getInput()->getCursor()->x - grabX;
+	double border_y = compositor.getInput()->getCursor()->y - grabY;
+	int new_left = grab_geobox.x;
+	int new_right = grab_geobox.x + grab_geobox.width;
+	int new_top = grab_geobox.y;
+	int new_bottom = grab_geobox.y + grab_geobox.height;
+
+	if (resize_edges & WLR_EDGE_TOP) {
+		new_top = border_y;
+		if (new_top >= new_bottom) {
+			new_top = new_bottom - 1;
+		}
+	} else if (resize_edges & WLR_EDGE_BOTTOM) {
+		new_bottom = border_y;
+		if (new_bottom <= new_top) {
+			new_bottom = new_top + 1;
+		}
+	}
+	if (resize_edges & WLR_EDGE_LEFT) {
+		new_left = border_x;
+		if (new_left >= new_right) {
+			new_left = new_right - 1;
+		}
+	} else if (resize_edges & WLR_EDGE_RIGHT) {
+		new_right = border_x;
+		if (new_right <= new_left) {
+			new_right = new_left + 1;
+		}
+	}
+
+	struct wlr_box *geo_box = &wnd->getTopLevel()->base->geometry;
+	wlr_scene_node_set_position(&wnd->getSceneTree()->node,
+		new_left - geo_box->x, new_top - geo_box->y);
+
+	int new_width = new_right - new_left;
+	int new_height = new_bottom - new_top;
+	wlr_xdg_toplevel_set_size(wnd->getTopLevel(), new_width, new_height);
+
+}
 
 }
 

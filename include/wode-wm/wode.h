@@ -15,6 +15,11 @@ public:
     DataObject() {}
     DataObject(void *userData) { this->userData = userData; }
 
+    template <typename T>
+    operator T*() const {
+        return static_cast<T*>(userData);
+    }
+
     void *getUserData() { return userData; }
 private:
     void *userData;

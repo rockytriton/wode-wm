@@ -12,15 +12,23 @@ class TopLevelWindow : public Window {
 public:
     TopLevelWindow(Compositor &c, XdgShell &shell, wlr_xdg_toplevel *tl);
 
-
     virtual void onCommit(DataObject &data);
     virtual void onMap(DataObject &data);
     virtual void onUnmap(DataObject &data);
 
+    void onRequestMove(DataObject &data);
+
+    void onRequestResize(DataObject &data);
+
+    void onRequestMaximize(DataObject &data);
+
+    void onRequestFullScreen(DataObject &data);
+
+    void beginInteractive(CursorMode mode, uint32_t edges);
     void activate();
 
-    virtual wlr_surface *getSurface() { return toplevel->base->surface; }
-
+    wlr_scene_tree *getSceneTree() { return sceneTree; }
+    wlr_xdg_toplevel *getTopLevel() { return toplevel; }
 private:
     XdgShell &shell;
     wlr_xdg_toplevel *toplevel;

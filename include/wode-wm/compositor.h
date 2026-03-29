@@ -8,6 +8,7 @@ namespace wode
 
 class Output;
 class XdgShell;
+class Input;
 
 class Compositor : public Component {
 public:
@@ -17,6 +18,7 @@ public:
     bool init();
 
     void onNewOutput(DataObject &data);
+    void onNewInput(DataObject &data);
 
 	const char *getSocket() { return socket; }
 
@@ -24,7 +26,16 @@ public:
 
     Output &getDefaultOutput();
     wlr_seat *getSeat() { return seat; }
-    
+
+    wl_display *getDisplay() { return display; }
+
+    wlr_output_layout *getOutputLayout() { return outputLayout; }
+
+    XdgShell *getXdgShell() { return xdgShell.get(); }
+
+    wlr_surface *getSurfaceAt(double lx, double ly, double *sx, double *sy);
+
+    Input *getInput() { return input.get(); }
 private:
 
 	wl_display *display;
@@ -41,6 +52,7 @@ private:
 
     unique_ptr<XdgShell> xdgShell;
     vector<unique_ptr<Output>> outputs;
+    unique_ptr<Input> input;
 };
 
 }

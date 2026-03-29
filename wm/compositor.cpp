@@ -1,6 +1,9 @@
 #include <wode-wm/compositor.h>
 #include <wode-wm/output.h>
 #include <wode-wm/xdg-shell.h>
+#include <wode-wm/input.h>
+#include <wode-wm/keyboard.h>
+
 
 namespace wode
 {
@@ -48,9 +51,10 @@ bool Compositor::init() {
 	scene = wlr_scene_create();
 	sceneLayout = wlr_scene_attach_output_layout(scene, outputLayout);
 
+    input = make_unique<Input>(*this, backend);
+
     addWaylandSignal(&backend->events.new_output, onNewOutput);
 
-    //todo xdg...
     xdgShell = make_unique<XdgShell>(*this, wlr_xdg_shell_create(display, 3));
 
     seat = wlr_seat_create(display, "seat0");
@@ -98,6 +102,23 @@ void Compositor::onNewOutput(DataObject &data) {
 
 Output &Compositor::getDefaultOutput() {
     return *outputs[0].get();
+}
+
+wlr_surface *Compositor::getSurfaceAt(double lx, double ly, double *sx, double *sy) {
+	wlr_scene_node *node = wlr_scene_node_at(&scene->tree.node, lx, ly, sx, sy);
+
+	if (node == NULL || node->type != WLR_SCENE_NODE_BUFFER) {
+		return NULL;
+	}
+
+	struct wlr_scene_buffer *scene_buffer = wlr_scene_buffer_from_node(node);
+	struct wlr_scene_surface *scene_surface =
+		wlr_scene_surface_try_from_buffer(scene_buffer);
+	if (!scene_surface) {
+		return NULL;
+	}
+
+	return scene_surface->surface;
 }
 
 }
