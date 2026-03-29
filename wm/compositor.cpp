@@ -3,6 +3,8 @@
 #include <wode-wm/xdg-shell.h>
 #include <wode-wm/input.h>
 #include <wode-wm/keyboard.h>
+#include <wode-wm/popup-window.h>
+#include <wode-wm/layer-window.h>
 
 
 namespace wode
@@ -57,7 +59,10 @@ bool Compositor::init() {
 
     xdgShell = make_unique<XdgShell>(*this, wlr_xdg_shell_create(display, 3));
 
+
     seat = wlr_seat_create(display, "seat0");
+
+    addWaylandSignal(&seat->events.request_set_cursor, onRequestCursor);
 
     println("Set Seat {} to {}", (void*)this, (void*)seat);
 
@@ -119,6 +124,17 @@ wlr_surface *Compositor::getSurfaceAt(double lx, double ly, double *sx, double *
 	}
 
 	return scene_surface->surface;
+}
+
+void Compositor::onRequestCursor(DataObject &data) {
+    wlr_seat_pointer_request_set_cursor_event *event = data;
+
+	struct wlr_seat_client *focused_client = getSeat()->pointer_state.focused_client;
+
+	if (focused_client == event->seat_client) {
+		wlr_cursor_set_surface(input->getCursor(), event->surface,
+				event->hotspot_x, event->hotspot_y);
+	}
 }
 
 }

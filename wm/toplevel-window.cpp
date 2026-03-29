@@ -40,7 +40,7 @@ void TopLevelWindow::onMap(DataObject &data) {
 }
 
 void TopLevelWindow::onUnmap(DataObject &data) {
-    println("ON TopLevelWindow UNMAP");
+    cleanup();
 }
 
 void TopLevelWindow::beginInteractive(CursorMode mode, uint32_t edges) {
@@ -71,12 +71,10 @@ void TopLevelWindow::beginInteractive(CursorMode mode, uint32_t edges) {
 }
 
 void TopLevelWindow::onRequestMove(DataObject &data) {
-	printf("ON TopLevelWindow::onRequestMove\n");
 	beginInteractive(TINYWL_CURSOR_MOVE, 0);
 }
 
 void TopLevelWindow::onRequestResize(DataObject &data) {
-	printf("ON TopLevelWindow::onRequestMove\n");
     wlr_xdg_toplevel_resize_event *event = data;
 	beginInteractive(TINYWL_CURSOR_RESIZE, event->edges);
 }

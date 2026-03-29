@@ -105,7 +105,10 @@ void Input::onCursorButton(DataObject &obj) {
 		double sx, sy;
 
 		TopLevelWindow *wnd = compositor.getXdgShell()->getWindowAt(cursor->x, cursor->y, &sx, &sy);
-		compositor.getXdgShell()->focus(*wnd);
+
+        if (wnd) {
+		    compositor.getXdgShell()->focus(*wnd);
+        }
 	}
 }
 

@@ -8,6 +8,8 @@ namespace wode
 
 class Compositor;
 class TopLevelWindow;
+class PopupWindow;
+class LayerWindow;
 
 class XdgShell : public CompositorComponent {
 public:
@@ -15,6 +17,7 @@ public:
 
     void newTopLevel(DataObject &data);
     void newPopup(DataObject &data);
+    void onNewLayerSurface(DataObject &data);
 
     void focus(TopLevelWindow &window);
     
@@ -27,7 +30,7 @@ public:
 
     void setGrabX(int x) { grabX = x; }
     void setGrabY(int y) { grabY = y; }
-    
+
 	wlr_box getGrabGeoBox() { return grab_geobox; }
 	void setGrabGeoBox(wlr_box g) { grab_geobox = g; }
 	void setResizeEdgets(uint32_t e) { resize_edges = e; }
@@ -35,15 +38,22 @@ public:
     TopLevelWindow *getWindowAt(double lx, double ly, double *sx, double *sy);
 
     void processResize();
+
+    void arrangeLayers();
 private:
     TopLevelWindow *grabbedWindow;
 
     vector<unique_ptr<TopLevelWindow>> toplevels;
+    vector<unique_ptr<PopupWindow>> popups;
+
+    vector<unique_ptr<LayerWindow>> layers;
+
 	wlr_xdg_shell *shell;
 
 	int grabX;
     int grabY;
 	wlr_box grab_geobox;
+
 	uint32_t resize_edges;
 };
 

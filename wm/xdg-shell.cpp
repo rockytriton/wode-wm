@@ -1,7 +1,10 @@
 #include <wode-wm/xdg-shell.h>
+#include <wode-wm/popup-window.h>
 #include <wode-wm/toplevel-window.h>
+#include <wode-wm/layer-window.h>
 #include <wode-wm/compositor.h>
 #include <wode-wm/input.h>
+#include <wode-wm/output.h>
 
 namespace wode
 {
@@ -10,6 +13,10 @@ XdgShell::XdgShell(Compositor &c, wlr_xdg_shell *shell) : CompositorComponent(c)
     addWaylandSignal(&shell->events.new_toplevel, newTopLevel);
     addWaylandSignal(&shell->events.new_popup, newPopup);
     
+    auto layer_shell = wlr_layer_shell_v1_create(compositor.getDisplay(), 4);
+
+	addWaylandSignal(&layer_shell->events.new_surface, onNewLayerSurface);
+
 }
 
 void XdgShell::newTopLevel(DataObject &data) {
@@ -18,7 +25,14 @@ void XdgShell::newTopLevel(DataObject &data) {
 }
 
 void XdgShell::newPopup(DataObject &data) {
+    wlr_xdg_popup *event = data;
 
+    if (event->parent == nullptr) {
+        println("WARN: NULL PARENT");
+        return;
+    }
+
+    popups.push_back(make_unique<PopupWindow>(compositor, *this, event, nullptr));
 }
 
 void XdgShell::focus(TopLevelWindow &window) {
@@ -56,8 +70,8 @@ void XdgShell::focus(TopLevelWindow &window) {
 TopLevelWindow *XdgShell::getWindowAt(double lx, double ly, double *sx, double *sy) {
 	wlr_scene_node *node = wlr_scene_node_at(&compositor.getScene()->tree.node, lx, ly, sx, sy);
 
-	if (node == NULL || node->type != WLR_SCENE_NODE_BUFFER) {
-		return NULL;
+	if (node == nullptr || node->type != WLR_SCENE_NODE_BUFFER) {
+		return nullptr;
 	}
 
 	struct wlr_scene_buffer *scene_buffer = wlr_scene_buffer_from_node(node);
@@ -65,12 +79,12 @@ TopLevelWindow *XdgShell::getWindowAt(double lx, double ly, double *sx, double *
 		wlr_scene_surface_try_from_buffer(scene_buffer);
 		
 	if (!scene_surface) {
-		return NULL;
+		return nullptr;
 	}
 
 	struct wlr_scene_tree *tree = node->parent;
 	
-	while (tree != NULL && tree->node.data == NULL) {
+	while (tree != nullptr && tree->node.data == nullptr) {
 		tree = tree->node.parent;
 	}
 
@@ -123,6 +137,37 @@ void XdgShell::processResize() {
 	int new_height = new_bottom - new_top;
 	wlr_xdg_toplevel_set_size(wnd->getTopLevel(), new_width, new_height);
 
+}
+
+void XdgShell::arrangeLayers() {
+    struct wlr_box full_area = {0};
+
+    auto dimensions = compositor.getDefaultOutput().getDimensions();
+
+    full_area.height = dimensions.height;
+    full_area.width = dimensions.width;
+    
+    struct wlr_box usable_area = full_area;
+
+    for (size_t i=0; i<layers.size(); i++) {
+        LayerWindow *layer_win = layers[i].get();
+        auto *scene_surface = layer_win->getSceneSurface();
+        auto *surface = layer_win->getLayerSurface();
+
+        wlr_scene_layer_surface_v1_configure(scene_surface, &full_area, &usable_area);
+
+        wlr_layer_surface_v1_configure(surface, full_area.width, surface->pending.desired_height);
+
+        int panel_height = surface->current.actual_height;
+
+        if (panel_height == 0) panel_height = 40; // fallback if not yet committed
+
+        wlr_scene_node_set_position(&scene_surface->tree->node, 0, full_area.height - panel_height);
+    }
+}
+
+void XdgShell::onNewLayerSurface(DataObject &data) {
+    layers.push_back(make_unique<LayerWindow>(compositor, *this, data));
 }
 
 }

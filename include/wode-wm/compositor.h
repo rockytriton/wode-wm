@@ -20,6 +20,8 @@ public:
     void onNewOutput(DataObject &data);
     void onNewInput(DataObject &data);
 
+    void onRequestCursor(DataObject &data);
+
 	const char *getSocket() { return socket; }
 
     wlr_scene *getScene() { return scene; }
