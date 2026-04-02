@@ -21,5 +21,6 @@ executable('wode-wm',
     xkbcommon,
     wayland_protocols
   ],
-  install: true
+  install: true,
+  install_dir : '/usr/bin'
 )

@@ -140,7 +140,7 @@ void XdgShell::processResize() {
 }
 
 void XdgShell::arrangeLayers() {
-    struct wlr_box full_area = {0};
+    struct wlr_box full_area = {};
 
     auto dimensions = compositor.getDefaultOutput().getDimensions();
 

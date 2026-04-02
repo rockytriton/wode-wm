@@ -4,10 +4,24 @@
 namespace wode
 {
 
+void add_test_mode(struct wlr_output *output, int32_t width, int32_t height, int32_t refresh) {
+    struct wlr_output_mode *mode = (struct wlr_output_mode *)calloc(1, sizeof(*mode));
+    if (!mode) return;
+
+    mode->width = width;
+    mode->height = height;
+    mode->refresh = refresh;
+    
+    // Add it to the output's internal list of supported modes
+    wl_list_insert(&output->modes, &mode->link);
+}
+
+
+
 Output::Output(Compositor &c, wlr_output *output) : compositor(c), output(output) {
     wlr_output_state state;
 	wlr_output_state_init(&state);
-	wlr_output_state_set_scale(&state, 1.5);
+	//wlr_output_state_set_scale(&state, 1.5);
 	wlr_output_state_set_enabled(&state, true);
 
     wlr_output_mode *mode = wlr_output_preferred_mode(output);
@@ -22,6 +36,15 @@ Output::Output(Compositor &c, wlr_output *output) : compositor(c), output(output
     addWaylandSignal(&output->events.request_state, onRequestState);
     addWaylandSignal(&output->events.frame, onFrame);
     addWaylandSignal(&output->events.destroy, onDestroy);
+	
+	if (std::string_view(output->name).starts_with("WL-") || 
+		std::string_view(output->name).starts_with("X11-")) {
+		// This is a nested/software output
+		// In your onNewOutput handler:
+		add_test_mode(output, 1920, 1080, 60000);
+		add_test_mode(output, 1600, 900, 60000);
+		add_test_mode(output, 1280, 720, 60000);
+	}
 }
 
 Dimensions Output::getDimensions() {

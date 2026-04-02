@@ -51,6 +51,8 @@ bool Keyboard::handleKeyBinding(xkb_keysym_t sym) {
 			execl("/bin/sh", "/bin/sh", "-c", "code", (void *)NULL);
 		}break;
 
+	case XKB_KEY_F4:
+		exit(1);
 		
 	default:
 		return false;

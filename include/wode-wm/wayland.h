@@ -1,7 +1,7 @@
 #pragma once
 
-#include "wode.h"
-#include "wlr.h"
+#include <wode-wm/wode.h>
+#include <wode-wm/wlr.h>
 
 namespace wode 
 {

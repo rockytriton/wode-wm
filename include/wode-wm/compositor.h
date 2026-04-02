@@ -22,6 +22,9 @@ public:
 
     void onRequestCursor(DataObject &data);
 
+    void onOutputManagerApply(DataObject &data);
+    void onOutputManagerTest(DataObject &data);
+
 	const char *getSocket() { return socket; }
 
     wlr_scene *getScene() { return scene; }
@@ -38,6 +41,9 @@ public:
     wlr_surface *getSurfaceAt(double lx, double ly, double *sx, double *sy);
 
     Input *getInput() { return input.get(); }
+
+    void spawn(const std::string &command);
+
 private:
 
 	wl_display *display;
@@ -48,6 +54,7 @@ private:
 
 	wlr_scene_output_layout *sceneLayout;
     wlr_output_layout *outputLayout;
+    wlr_output_manager_v1 *outputManager;
 
     wlr_seat *seat;
     const char *socket;
